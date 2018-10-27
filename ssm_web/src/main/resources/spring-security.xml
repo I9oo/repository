@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:security="http://www.springframework.org/schema/security"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security.xsd">
+
+    <!--
+       auto-config 是否自动生成登陆页面。如果自己有配置登陆页面以自己配置的为准。（form-login）
+       use-expressions 是否开启SpEL表达式
+       security:intercept-url  拦截规则与需要的角色权限
+           pattern="/**"       拦截所有请求
+           access="ROLE_USER"  访问系统必须有ROLE_USER角色
+                               必须：ROLE_ 开头。
+       security:form-login     登陆表单配置
+                   login-page="/login.html"     登陆页面
+                   username-parameter="uname"   页面参数
+                   password-parameter="pwd"     页面参数
+                   login-processing-url="/login"登陆提交地址
+                   authentication-failure-url="/fail.html" 登陆失败跳转页面
+                   default-target-url="/success.html"      默认跳转的页面（登陆成功跳转的页面）
+       security:logout          退出配置
+                   logout-url="/logout"             退出地址
+                   logout-success-url="/login.html" 退出成功后跳转地址
+                   invalidate-session="true"        是否销毁session
+   -->
+
+    <!--放行的资源。访问这里的资源不认证。-->
+    <security:http pattern="/login.jsp" security="none" />
+    <security:http pattern="/failer.jsp" security="none" />
+
+    <security:http pattern="/css/**" security="none" />
+    <security:http pattern="/img/**" security="none" />
+    <security:http pattern="/plugins/**" security="none" />
+
+
+    <security:http auto-config="true" use-expressions="true">
+
+        <security:intercept-url pattern="/**" access="hasAnyRole('ROLE_USER','ROLE_ADMIN')"></security:intercept-url>
+
+        <security:form-login
+                login-page="/login.jsp"
+                username-parameter="username"
+                password-parameter="password"
+                login-processing-url="/login"
+                authentication-failure-url="/failer.jsp"
+                default-target-url="/index.jsp"></security:form-login>
+
+        <security:logout
+                logout-url="/logout"
+                logout-success-url="/login.jsp"
+                invalidate-session="true"></security:logout>
+
+        <!--如果没有权限，默认跳转的页面-->
+        <security:access-denied-handler error-page="/403.jsp"/>
+
+        <!--关闭csrf验证-->
+        <security:csrf disabled="true"></security:csrf>
+    </security:http>
+
+    <!--认证：需要调用service查询数据库。-->
+    <!--要求：service一定要实现接口UserDetailsService-->
+    <!--{noop}表示密码不加密，默认要指定一个编码器进行加密。-->
+    <security:authentication-manager>
+        <security:authentication-provider user-service-ref="userService">
+            <!--指定登陆时候按照哪种加密算法对密码自动进行加密，再匹配-->
+            <security:password-encoder ref="passwordEncoder" />
+        </security:authentication-provider>
+    </security:authentication-manager>
+
+    <!--配置加密类-->
+    <bean id="passwordEncoder"
+          class="org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder"/>
+
+    <!--
+    开启Spring权限校验注解支持，三种方式，只能使用其中一种。
+    方式1：jsr-250提供的权限校验注解支持
+          开启注解支持：
+            <security:global-method-security jsr250-annotations="enabled"/>
+           使用：@RolesAllowed
+    方式2：springsecurity框架提供的权限校验注解支持
+          <security:global-method-security secured-annotations="enabled"/>
+          使用：@Secured注解
+
+    方式3：使用SpEL提供的权限校验注解支持
+          <security:global-method-security pre-post-annotations="enabled"/>
+          使用：@PreAuthorize注解
+    -->
+    <security:global-method-security pre-post-annotations="enabled"/>
+
+</beans>
+
+
+
+
+
+
+
+
+
+
+
+
+
