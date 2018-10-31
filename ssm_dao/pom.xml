@@ -11,7 +11,7 @@
 
     <artifactId>ssm_dao</artifactId>
 
-    <!--233. 依赖domain-->
+    <!--2334. 依赖domain-->
     <dependencies>
         <dependency>
             <groupId>com.itheima</groupId>
